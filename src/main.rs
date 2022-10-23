@@ -15,11 +15,13 @@ use log::info;
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 
-#[derive(Clone)]
+
+#[derive(Clone, PartialEq)]
 struct User {
     github_login: String,
     name: String,
-    avatar: String
+    avatar: String,
+    in_photos: Vec<String>
 }
 
 #[Object]
@@ -36,41 +38,52 @@ impl User {
         self.avatar.clone()
     }
 
+    async fn in_photos(&self) -> Vec<Photo> {
+        let photos = PHOTOS.lock().unwrap().clone().into_iter()
+            .filter(|photo| self.in_photos.contains(&photo.name)).collect();
+        photos
+    }
+
     async fn posted_photos(&self) -> Vec<Photo> {
         let photos = PHOTOS.lock().unwrap().clone().into_iter()
-            .filter(|x| x.github_user == self.github_login)
-            .collect();
+            .filter(|x| x.github_user == self.github_login).collect();
         photos
     }
 }
 
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 struct Photo {
     id: usize,
     name: String,
     description: String,
     github_user: String,
-    category: PhotoCategory
+    category: PhotoCategory,
+    tagged_users: Vec<String>
 }
-
 
 #[Object]
 impl Photo {
     async fn id(&self) -> usize {
-        return self.id
+        self.id
     }
 
     async fn name(&self) -> String {
-        return self.name.clone()
+        self.name.clone()
     }
 
     async fn description(&self) -> String {
-        return self.description.clone()
+        self.description.clone()
     }
 
     async fn category(&self) -> PhotoCategory {
-        return self.category
+        self.category
+    }
+
+    async fn tagged_users(&self) -> Vec<User> {
+        let users = USERS.lock().unwrap().clone().into_iter()
+            .filter(|user| self.tagged_users.contains(&user.name)).collect();
+        users
     }
 
     async fn posted_by(&self) -> User {
@@ -103,17 +116,20 @@ static USERS: Lazy<Mutex<Vec<User>>> = Lazy::new(|| Mutex::new(vec![
     User {
         github_login: "mHattrup".to_string(),
         name: "Mike Hattrup".to_string(),
-        avatar: "".to_string()
+        avatar: "".to_string(),
+        in_photos: vec![]
     },
     User {
         github_login: "gPlake".to_string(),
         name: "Glen Plake".to_string(),
-        avatar: "".to_string()
+        avatar: "".to_string(),
+        in_photos: vec!["Dropping the Heart Chute".to_string()]
     },
     User {
         github_login: "sSchmidt".to_string(),
         name: "Scot Schmidt".to_string(),
-        avatar: "".to_string()
+        avatar: "".to_string(),
+        in_photos: ["Enjoying the sunshine", "25 laps on gunbarrel today"].iter().map(|&s| s.into()).collect()
     },
 ]));
 
@@ -124,6 +140,7 @@ static PHOTOS: Lazy<Mutex<Vec<Photo>>> = Lazy::new(|| Mutex::new(vec![
         description: "The heart chute is one of my favorite chutes".to_string(),
         category: PhotoCategory::Action,
         github_user: "gPlake".to_string(),
+        tagged_users: vec![]
     },
     Photo {
         id: 2,
@@ -131,6 +148,7 @@ static PHOTOS: Lazy<Mutex<Vec<Photo>>> = Lazy::new(|| Mutex::new(vec![
         description: "".to_string(),
         category: PhotoCategory::Selfie,
         github_user: "sSchmidt".to_string(),
+        tagged_users: vec!["Mike Hattrup".to_string()]
     },
     Photo {
         id: 3,
@@ -138,6 +156,7 @@ static PHOTOS: Lazy<Mutex<Vec<Photo>>> = Lazy::new(|| Mutex::new(vec![
         description: "25 laps on gunbarrel today".to_string(),
         category: PhotoCategory::Landscape,
         github_user: "sSchmidt".to_string(),
+        tagged_users: vec!["Glen Plake", "Scot Schmidt"].iter().map(|&s| s.into()).collect()
     },
 ]));
 
@@ -184,7 +203,8 @@ impl Mutation {
             name: input.name, 
             description: input.description,
             github_user: input.github_user,
-            category: input.category
+            category: input.category,
+            tagged_users: vec![]
         };
         PHOTOS.lock().unwrap().push(photo.clone());
         info!("mutation: post_photo");
