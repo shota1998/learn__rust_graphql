@@ -1,0 +1,13 @@
+version: '3'
+
+services:    
+  rust-graphql:
+    container_name: 'rust-graphql'
+    image: 'postgres:11.2'
+    ports:
+      - '15432:5432'
+    user: ${POSTGRES_USER}
+    environment:
+      - 'POSTGRES_USER=main'
+      - 'POSTGRES_DB=main'
+      - 'POSTGRES_PASSWORD=main'
