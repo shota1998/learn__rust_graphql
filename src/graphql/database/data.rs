@@ -5,6 +5,15 @@ use crate::graphql::enums::photo_category::PhotoCategory;
 
 pub static SEQUENCE_ID: Lazy<Mutex<usize>> = Lazy::new(|| Mutex::new(0));
 
+pub static DAMY_USER: Lazy<Mutex<User>> = Lazy::new(|| Mutex::new( 
+    User {
+        github_login: "damy".to_string(),
+        name: "damy".to_string(),
+        avatar: "".to_string(),
+        in_photos: ["damy", "damy"].iter().map(|&s| s.into()).collect()
+    }
+));
+
 pub static USERS: Lazy<Mutex<Vec<User>>> = Lazy::new(|| Mutex::new(vec![
     User {
         github_login: "mHattrup".to_string(),

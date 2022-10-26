@@ -39,7 +39,11 @@ impl Photo {
 
     async fn posted_by(&self) -> User {
         let user = USERS.lock().unwrap().clone().into_iter()
-            .find(|user| user.github_login == self.github_user).unwrap();
-        user
+            .find(|user| user.github_login == self.github_user);
+        
+        match user {
+            Some(user) => user,
+            None => DAMY_USER.lock().unwrap().clone()
+        }
     }
 }
