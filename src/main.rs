@@ -14,9 +14,10 @@ use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
 use log::info;
 
 mod graphql;
-use graphql::typye::ApiSchema;
-use crate::graphql::mutation::Mutation;
-use crate::graphql::query::Query;
+use crate::graphql::{typye::ApiSchema, mutation::Mutation, query::Query};
+use crate::graphql::database::connection::create_connection_pool;
+
+use ::graphql::create_schema_with_context;
 
 
 async fn index(schema: web::Data<ApiSchema>, req: GraphQLRequest) -> GraphQLResponse {
@@ -46,7 +47,9 @@ fn not_found<B>(res: ServiceResponse<B>)
 async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "info");
     env_logger::init();
+    let pool   = create_connection_pool();
     let schema = Schema::build(Query, Mutation, EmptySubscription).finish();
+    let schema = web::Data::new(create_schema_with_context(pool));
 
     println!("Playground: http://localhost:8000");
 
