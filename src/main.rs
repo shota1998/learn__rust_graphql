@@ -7,6 +7,8 @@ mod graphql;
 use crate::graphql::database::connection::create_connection_pool;
 use ::graphql::{create_schema_with_context, configure_service, not_found};
 
+mod persistence;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     println!("Playground: http://localhost:8000");

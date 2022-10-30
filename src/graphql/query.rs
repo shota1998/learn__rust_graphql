@@ -1,6 +1,6 @@
-use async_graphql::Object;
+use async_graphql::{Object, Context};
 use log::info;
-use super::model::{user::User, photo::Photo};
+use super::model::{user::User, photo::Photo, article::Article};
 use super::database::data::*;
 
 pub struct Query;
@@ -21,4 +21,8 @@ impl Query {
         info!("query: all_users");
         USERS.lock().unwrap().clone()
     }
+
+    // async fn all_articles(&self, ctx: &Context<'_>) -> Vec<Article> {
+        
+    // }
 }
